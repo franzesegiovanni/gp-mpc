@@ -2,11 +2,11 @@ import logging
 import math
 import time
 
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
 import torch.autograd
-from gym import wrappers, logger as gym_log
+from gymnasium import wrappers, logger as gym_log
 from mpc import mpc
 
 gym_log.set_level(gym_log.INFO)
@@ -16,13 +16,13 @@ logging.basicConfig(level=logging.DEBUG,
                     datefmt='%m-%d %H:%M:%S')
 
 if __name__ == "__main__":
-    ENV_NAME = "Pendulum-v0"
+    ENV_NAME = "Pendulum-v1"
     TIMESTEPS = 10  # T
     N_BATCH = 1
     LQR_ITER = 50
     ACTION_LOW = -2.0
     ACTION_HIGH = 2.0
-    d = "cpu"
+    d = "gpu"
     dtype = torch.double
     # new hyperparameters for approximate dynamics
     H_UNITS = 16
@@ -154,7 +154,8 @@ if __name__ == "__main__":
     run_iter = 500
 
     downward_start = True
-    env = gym.make(ENV_NAME).env  # bypass the default TimeLimit wrapper
+    # env = gym.make(ENV_NAME).env  # bypass the default TimeLimit wrapper
+    env = gym.make(ENV_NAME,render_mode="human").env
     env.reset()
     if downward_start:
         env.state = [np.pi, 1]
@@ -167,15 +168,20 @@ if __name__ == "__main__":
             pre_action_state = env.state
             action = np.random.uniform(low=ACTION_LOW, high=ACTION_HIGH)
             env.step([action])
-            # env.render()
+            #env.render()
             new_data[i, :nx] = pre_action_state
             new_data[i, nx:] = action
 
         train(new_data)
         logger.info("bootstrapping finished")
 
-    env = wrappers.Monitor(env, '/tmp/box_ddp_pendulum_approx/', force=True)
-    env.reset()
+    
+    # Directory where video recordings will be saved
+    video_dir = '/tmp/box_ddp_pendulum_approx/'
+
+    # Create a VideoRecorder to record videos
+    # video_recorder = gym.wrappers.RecordVideo(env, video_dir)
+
     if downward_start:
         env.env.state = [np.pi, 1]
 
@@ -212,11 +218,12 @@ if __name__ == "__main__":
         u_init = torch.cat((nominal_actions[1:], torch.zeros(1, N_BATCH, nu, dtype=dtype)), dim=0)
 
         elapsed = time.perf_counter() - command_start
-        s, r, _, _ = env.step(action.detach().numpy())
+        s, r, _, _, _ = env.step([action.detach().numpy()[0][0]])
         total_reward += r
         logger.debug("action taken: %.4f cost received: %.4f time taken: %.5fs", action, -r, elapsed)
-        if render:
-            env.render()
+        # if render:
+        env.render()
+            # video_recorder.capture_frame()
 
         di = i % retrain_after_iter
         if di == 0 and i > 0:

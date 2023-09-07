@@ -1,24 +1,13 @@
-# mpc.pytorch • [![Build Status][travis-image]][travis] [![PyPi][pypi-image]][pypi] [![License][license-image]][license]
+See the original code at [locuslab/mpc.pytorch](http://locuslab.github.io/mpc.pytorch)
 
-[travis-image]: https://travis-ci.org/locuslab/mpc.pytorch.png?branch=master
-[travis]: http://travis-ci.org/locuslab/mpc.pytorch
+The original code was used as a baseline to build the code in this repository.
+The goal of this repository is to study the effect of learned dynamics with Gaussian Process (but not only) on the performance of the MPC controller.
 
-[pypi-image]: https://img.shields.io/pypi/v/mpc.svg
-[pypi]: https://pypi.python.org/pypi/mpc
+## Installation
+pip install -r requirements.txt
 
-[license-image]: http://img.shields.io/badge/license-MIT-blue.svg?style=flat
-[license]: LICENSE
+sudo apt install ffmpeg
 
-*A fast and differentiable model predictive control solver for PyTorch.
-Crafted by <a href="https://bamos.github.io">Brandon Amos</a>,
-Ivan Jimenez,
-Jacob Sacks,
-<a href='https://www.cc.gatech.edu/~bboots3/'>Byron Boots</a>,
-and
-<a href="https://zicokolter.com">J. Zico Kolter</a>.*
+## Usage
 
----
-
-+ [More details are available on our project website here](http://locuslab.github.io/mpc.pytorch)
-+ This is still an early alpha release, be prepared for some rough
-  spots and get in touch if you have any questions!
+python3 examples/stability_test.py

@@ -2,11 +2,11 @@ import logging
 import math
 import time
 
-import gym
+import gymnasium as gym 
 import numpy as np
 import torch
 import torch.autograd
-from gym import wrappers, logger as gym_log
+from gymnasium import wrappers, logger as gym_log
 from mpc import mpc
 
 gym_log.set_level(gym_log.INFO)
@@ -16,12 +16,12 @@ logging.basicConfig(level=logging.DEBUG,
                     datefmt='%m-%d %H:%M:%S')
 
 if __name__ == "__main__":
-    ENV_NAME = "Pendulum-v0"
+    ENV_NAME = "Pendulum-v1"
     TIMESTEPS = 10  # T
     N_BATCH = 1
     LQR_ITER = 5
-    ACTION_LOW = -2.0
-    ACTION_HIGH = 2.0
+    ACTION_LOW = -1.0
+    ACTION_HIGH = 1.0
 
 
     class PendulumDynamics(torch.nn.Module):
@@ -50,15 +50,19 @@ if __name__ == "__main__":
 
 
     downward_start = True
-    env = gym.make(ENV_NAME).env  # bypass the default TimeLimit wrapper
-    env.reset()
+    env = gym.make(ENV_NAME,render_mode="human").env  # bypass the default TimeLimit wrapper
+    # env = gym.make(ENV_NAME).env
+    # print(env.render_mode)
+    env.action_space.seed(42)
+    observation, info = env.reset(seed=42)
+    # env.reset()S
     if downward_start:
         env.state = [np.pi, 1]
 
-    env = wrappers.Monitor(env, '/tmp/box_ddp_pendulum/', force=True)
-    env.reset()
-    if downward_start:
-        env.env.state = [np.pi, 1]
+    # env = wrappers.Monitor(env, '/tmp/box_ddp_pendulum/', force=True)
+    # env.reset()
+    # if downward_start:
+    #     env.env.state = [np.pi, 1]
 
     nx = 2
     nu = 1
@@ -100,10 +104,12 @@ if __name__ == "__main__":
         u_init = torch.cat((nominal_actions[1:], torch.zeros(1, N_BATCH, nu)), dim=0)
 
         elapsed = time.perf_counter() - command_start
-        s, r, _, _ = env.step(action.detach().numpy())
+        # s, r, _, _, _ = env.step(1)
+        s, r, _, _, _ = env.step([action.detach().numpy()[0][0]])
         total_reward += r
         logger.debug("action taken: %.4f cost received: %.4f time taken: %.5fs", action, -r, elapsed)
         if render:
+            # print("should render")
             env.render()
 
     logger.info("Total reward %f", total_reward)
